@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import callApi from './../../utils/apiCaller';
 import {Link} from 'react-router-dom';
+import {actAddProductRequest, actGetProductRequest} from './../../actions/index';
+import {connect} from 'react-redux';
 
 class ProductActionPage extends Component {
 
@@ -19,15 +21,7 @@ class ProductActionPage extends Component {
     if(match) {
       var id = match.params.id;
       console.log(id);
-      callApi(`products/${id}`, 'GET', null).then((res)=> {
-        var data = res.data;
-        this.setState({
-          id: data.id,
-          txtName: data.name,
-          txtPrice: data.price,
-          chkbStatus: data.status
-        })
-      });
+      this.props.onEditProduct(id);
     }
   }
 
@@ -44,6 +38,12 @@ class ProductActionPage extends Component {
     e.preventDefault();
     var { txtName, txtPrice, chkbStatus, id } = this.state;
     var {history} = this.props;
+    var product = {
+      id: id,
+      name: txtName,
+      price: txtPrice,
+      status: chkbStatus
+    }
     if(id){
       callApi(`products/${id}`, 'PUT', {
         name: txtName,
@@ -53,13 +53,8 @@ class ProductActionPage extends Component {
         history.push('/products');
       });
     }else{
-      callApi('products', 'POST', {
-        name: txtName,
-        price: txtPrice,
-        status: chkbStatus
-      }).then(() => {
-        history.push('/products');
-      });
+      this.props.onAddProduct(product);
+      history.push('/products');
     }
   }
 
@@ -113,4 +108,16 @@ class ProductActionPage extends Component {
   }
 }
 
-export default ProductActionPage;
+const mapDispatchToProps = (dispatch, props) => {
+  return {
+    onAddProduct: (product) => {
+      dispatch(actAddProductRequest(product));
+    },
+
+    onEditProduct: (id) => {
+      dispatch(actGetProductRequest(id));
+    }
+  }
+}
+
+export default connect(null, mapDispatchToProps)(ProductActionPage);
